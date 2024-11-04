@@ -27,7 +27,8 @@ ROOT = HERE.parent
 logger = logging.getLogger(__name__)
 
 MODEL_URL = "https://github.com/oracl4/RoadDamageDetection/raw/main/models/YOLOv8_Small_RDD.pt"  # noqa: E501
-download_file(MODEL_URL, MODEL_LOCAL_PATH, expected_size=89569358)
+
+download_file(MODEL_URL, expected_size=89569358)
 
 # Session-specific caching
 # Load the model
