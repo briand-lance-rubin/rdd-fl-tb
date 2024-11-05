@@ -2,15 +2,13 @@ import os
 import logging
 from pathlib import Path
 from typing import NamedTuple
-
+import gdown  # You need to install this package for downloading from Google Drive
 import cv2
 import numpy as np
 import streamlit as st
-
-# Deep learning framework
-from ultralytics import YOLO
 from PIL import Image
 from io import BytesIO
+from ultralytics import YOLO
 
 from sample_utils.download import download_file
 
@@ -26,9 +24,20 @@ ROOT = HERE.parent
 
 logger = logging.getLogger(__name__)
 
-MODEL_URL = "https://github.com/oracl4/RoadDamageDetection/raw/main/models/YOLOv8_Small_RDD.pt"  # noqa: E501
+# Google Drive model URL    https://drive.google.com/file/d/1DdABmT5_axQpv6w51bfNwkq226A94D_m/view?usp=sharing
+MODEL_GOOGLE_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1DdABmT5_axQpv6w51bfNwkq226A94D_m"  # Replace FILE_ID with actual ID
+MODEL_LOCAL_PATH = ROOT / "models" / "YOLO_Pretrained_Model_RDD_FL.pt"
 
-download_file(MODEL_URL, expected_size=89569358)
+def download_from_google_drive(url: str, destination: Path):
+    """Download file from Google Drive using gdown."""
+    if not destination.exists():
+        logger.info(f"Downloading model from Google Drive to {destination}")
+        gdown.download(url, str(destination), quiet=False)
+    else:
+        logger.info(f"Model already downloaded at {destination}")
+
+# Download the model from Google Drive
+download_from_google_drive(MODEL_GOOGLE_DRIVE_URL, MODEL_LOCAL_PATH)
 
 # Session-specific caching
 # Load the model
@@ -72,7 +81,7 @@ if image_file is not None:
     h_ori = _image.shape[0]
     w_ori = _image.shape[1]
 
-    image_resized = cv2.resize(_image, (640, 640), interpolation = cv2.INTER_AREA)
+    image_resized = cv2.resize(_image, (640, 640), interpolation=cv2.INTER_AREA)
     results = net.predict(image_resized, conf=score_threshold)
     
     # Save the results
@@ -89,7 +98,7 @@ if image_file is not None:
         ]
 
     annotated_frame = results[0].plot()
-    _image_pred = cv2.resize(annotated_frame, (w_ori, h_ori), interpolation = cv2.INTER_AREA)
+    _image_pred = cv2.resize(annotated_frame, (w_ori, h_ori), interpolation=cv2.INTER_AREA)
 
     # Original Image
     with col1:
