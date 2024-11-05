@@ -22,6 +22,6 @@ st.divider()
 # Footer
 st.markdown(
     """
-    Lakehead University - Computer Science Department
+    Research Methodology in Computer Science
     """
 )
