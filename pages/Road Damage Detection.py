@@ -70,8 +70,9 @@ st.write("Please upload the image and start detecting")
 
 image_file = st.file_uploader("Upload Image", type=['png', 'jpg'])
 
-score_threshold = st.slider("Confidence Threshold", min_value=0.0, max_value=1.0, value=0.5, step=0.05)
-st.write("Lower the threshold if there is no damage detected, and increase the threshold if there is false prediction.")
+# Fixed confidence threshold set to 0.5 (no slider anymore)
+score_threshold = 0.5
+st.write("Confidence Threshold is fixed to 0.5 for detection.")
 
 if image_file is not None:
     # Load the image
@@ -85,7 +86,7 @@ if image_file is not None:
     w_ori = _image.shape[1]
 
     image_resized = cv2.resize(_image, (640, 640), interpolation=cv2.INTER_AREA)
-    results = net.predict(image_resized, conf=score_threshold)
+    results = net.predict(image_resized, conf=score_threshold)  # Using the fixed threshold
     
     # Process the results
     for result in results:
