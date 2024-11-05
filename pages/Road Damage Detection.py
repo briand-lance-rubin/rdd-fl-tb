@@ -1,5 +1,6 @@
 import os
 import logging
+import tempfile
 from pathlib import Path
 from typing import NamedTuple
 import gdown  # You need to install this package for downloading from Google Drive
@@ -10,8 +11,7 @@ from PIL import Image
 from io import BytesIO
 from ultralytics import YOLO
 
-from sample_utils.download import download_file
-
+# Setting up Streamlit app configuration
 st.set_page_config(
     page_title="Road Damage Detection",
     page_icon="🚧",
@@ -19,15 +19,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-HERE = Path(__file__).parent
-ROOT = HERE.parent
-
+# Logger setup
 logger = logging.getLogger(__name__)
 
-# Google Drive model URL    https://drive.google.com/file/d/1DdABmT5_axQpv6w51bfNwkq226A94D_m/view?usp=sharing
-MODEL_GOOGLE_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1DdABmT5_axQpv6w51bfNwkq226A94D_m"  # Replace FILE_ID with actual ID
-MODEL_LOCAL_PATH = ROOT / "models" / "YOLO_Pretrained_Model_RDD_FL.pt"
+# Google Drive model URL (use your actual file ID here)
+MODEL_GOOGLE_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1DdABmT5_axQpv6w51bfNwkq226A94D_m"
 
+# Function to download model from Google Drive
 def download_from_google_drive(url: str, destination: Path):
     """Download file from Google Drive using gdown."""
     if not destination.exists():
@@ -36,17 +34,21 @@ def download_from_google_drive(url: str, destination: Path):
     else:
         logger.info(f"Model already downloaded at {destination}")
 
-# Download the model from Google Drive
-download_from_google_drive(MODEL_GOOGLE_DRIVE_URL, MODEL_LOCAL_PATH)
+# Function to cache and download the model to a temporary directory
+@st.cache_resource
+def load_model():
+    # Create a temporary directory to store the model
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        model_path = Path(tmpdirname) / "YOLO_Pretrained_Model_RDD_FL.pt"
+        
+        # Download model if not already present
+        download_from_google_drive(MODEL_GOOGLE_DRIVE_URL, model_path)
+        
+        # Load and return the model
+        return YOLO(model_path)
 
-# Session-specific caching
 # Load the model
-cache_key = "yolov8smallrdd"
-if cache_key in st.session_state:
-    net = st.session_state[cache_key]
-else:
-    net = YOLO(MODEL_LOCAL_PATH)
-    st.session_state[cache_key] = net
+net = load_model()
 
 CLASSES = [
     "Longitudinal Crack",
@@ -55,12 +57,14 @@ CLASSES = [
     "Potholes"
 ]
 
+# Detection class to store individual detection details
 class Detection(NamedTuple):
     class_id: int
     label: str
     score: float
     box: np.ndarray
 
+# Streamlit UI
 st.title("Road Damage Detection")
 st.write("Please upload the image and start detecting")
 
@@ -70,7 +74,6 @@ score_threshold = st.slider("Confidence Threshold", min_value=0.0, max_value=1.0
 st.write("Lower the threshold if there is no damage detected, and increase the threshold if there is false prediction.")
 
 if image_file is not None:
-
     # Load the image
     image = Image.open(image_file)
     
@@ -84,7 +87,7 @@ if image_file is not None:
     image_resized = cv2.resize(_image, (640, 640), interpolation=cv2.INTER_AREA)
     results = net.predict(image_resized, conf=score_threshold)
     
-    # Save the results
+    # Process the results
     for result in results:
         boxes = result.boxes.cpu().numpy()
         detections = [
