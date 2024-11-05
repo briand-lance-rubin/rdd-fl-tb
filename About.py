@@ -64,7 +64,7 @@ st.markdown(
         }
     </style>
     <div class="footer">
-        Lakehead University - Computer Science Department
+        Research Methodology in Computer Science
     </div>
     """,
     unsafe_allow_html=True
