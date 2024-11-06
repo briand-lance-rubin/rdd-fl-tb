@@ -70,9 +70,20 @@ st.write("Please upload the image and start detecting")
 
 image_file = st.file_uploader("Upload Image", type=['png', 'jpg'])
 
-# Fixed confidence threshold set to 0.5 (no slider anymore)
-score_threshold = 0.5
-st.write("Confidence Threshold is fixed to 0.5 for detection.")
+# Add a text input to allow the user to enter the confidence threshold
+confidence_input = st.text_input("Enter Confidence Threshold (0.0 to 1.0)", "0.5")
+
+# Convert the input to a float and handle invalid inputs
+try:
+    score_threshold = float(confidence_input)
+    if not (0.0 <= score_threshold <= 1.0):
+        st.error("Please enter a value between 0.0 and 1.0.")
+        score_threshold = 0.5  # Default to 0.5 if the input is invalid
+except ValueError:
+    st.error("Invalid input. Please enter a numeric value between 0.0 and 1.0.")
+    score_threshold = 0.5  # Default to 0.5 if input is not a valid float
+
+st.write(f"Confidence Threshold set to: {score_threshold:.2f}")
 
 if image_file is not None:
     # Load the image
@@ -86,7 +97,7 @@ if image_file is not None:
     w_ori = _image.shape[1]
 
     image_resized = cv2.resize(_image, (640, 640), interpolation=cv2.INTER_AREA)
-    results = net.predict(image_resized, conf=score_threshold)  # Using the fixed threshold
+    results = net.predict(image_resized, conf=score_threshold)  # Using the dynamic threshold
     
     # Process the results
     for result in results:
