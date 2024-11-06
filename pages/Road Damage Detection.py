@@ -66,7 +66,16 @@ class Detection(NamedTuple):
 
 # Streamlit UI
 st.title("Road Damage Detection")
-st.write("Please upload the image and start detecting")
+st.write("Please upload an image of road damage and let the model detect possible damage types.")
+
+# Add a section informing users about the types of road damage they can upload
+st.subheader("Types of Road Damage You Can Upload Images For:")
+st.write("""
+1. **Longitudinal Crack**: Cracks that run parallel to the direction of traffic, often caused by aging pavement or environmental stress.
+2. **Transverse Crack**: Cracks that run perpendicular to the direction of traffic, commonly resulting from temperature changes or loading stress.
+3. **Alligator Crack**: A pattern of interconnected cracks resembling the scales of an alligator, typically caused by fatigue in the road surface.
+4. **Potholes**: Depressions in the road surface, often caused by the erosion of underlying layers due to water infiltration and repeated traffic loading.
+""")
 
 image_file = st.file_uploader("Upload Image", type=['png', 'jpg'])
 
@@ -117,7 +126,7 @@ if image_file is not None:
 
     # Original Image
     with col1:
-        st.write("#### Image")
+        st.write("#### Original Image")
         st.image(_image)
     
     # Predicted Image
